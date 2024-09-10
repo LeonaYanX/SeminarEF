@@ -14,7 +14,8 @@ namespace SeminarEF
         {
             Register,
             Message,
-            Confirmation
+            Confirmation,
+            SendListOfUnreadMessages
         }
         public class MessageUdp 
         {
@@ -23,7 +24,7 @@ namespace SeminarEF
             public int? Id { get; set; }
             public string FromName { get; set; }
             public string ToName { get; set; }
-            public string Text { get; set; }
+            public string Text { get; set; } 
             //To Json serialization method
             public string ToJson() 
             {
