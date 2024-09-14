@@ -1,4 +1,5 @@
-﻿using SeminarEF.Db.Models;
+﻿using SeminarEF.Abstraction;
+using SeminarEF.Db.Models;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Eventing.Reader;
@@ -10,15 +11,17 @@ using System.Threading.Tasks;
 
 namespace SeminarEF
 {
-    internal class Server
+    public class Server
     {
         Dictionary<string, IPEndPoint> clients = new Dictionary<string, IPEndPoint>();
 
-        UdpClient udpClient;
+       //private readonly UdpClient _udpClient;
+        IMessageSource _messageSource;
 
-        public Server()
+        public Server(IMessageSource messageSource)
         {
-            udpClient = new UdpClient(8080);
+            _messageSource = messageSource;
+            //_udpClient = new UdpClient(8080);
 
         }
 
@@ -90,9 +93,11 @@ namespace SeminarEF
                         ToName = messagesUdp.ToName,
                         Text = messagesUdp.Text
 
-                    }.ToJson();
+                    };
 
-                    udpClient.Send(Encoding.UTF8.GetBytes(forwardMessageUdp), forwardMessageUdp.Length, iPEndPoint);
+                    _messageSource.Send(forwardMessageUdp, iPEndPoint);
+
+                   // _udpClient.Send(Encoding.UTF8.GetBytes(forwardMessageUdp), forwardMessageUdp.Length, iPEndPoint);
 
                     Console.WriteLine($"Message Relied, from = {messagesUdp.FromName} to = {messagesUdp.ToName}");
                 }
@@ -136,15 +141,18 @@ namespace SeminarEF
             Console.WriteLine("Server started");
             while (true)
             {
-                var message = udpClient.Receive(ref iPEndPoint);
+               
+                            
+
                 try
                 {
-                    var messageUdp = MessageUdp.FromJson(Encoding.UTF8.GetString(message)) ?? new MessageUdp();
+                    var messageUdp = _messageSource.Receive(ref iPEndPoint);   //_udpClient.Receive(ref iPEndPoint);
+                    Console.WriteLine(messageUdp.ToString());
                     ProcessMessage(messageUdp, iPEndPoint);
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine("Error deserializing message:" + e.Message);
+                    Console.WriteLine("Error while receiving message:" + e.Message);
                 }
 
 
@@ -182,7 +190,8 @@ namespace SeminarEF
                         foreach (var messageUdp in messageUdps)
                         {
                             var message = messageUdp.ToJson();
-                            udpClient.Send(Encoding.UTF8.GetBytes(message), message.Length, iPEndPoint);
+                            _messageSource.Send(messageUdp, iPEndPoint);
+                           // _udpClient.Send(Encoding.UTF8.GetBytes(message), message.Length, iPEndPoint);
                         }
 
                         foreach (var message in unreadMessages)
@@ -199,5 +208,7 @@ namespace SeminarEF
                 Console.WriteLine("Client is not registered please register first");
             }
         }
+
+       
     }
 }

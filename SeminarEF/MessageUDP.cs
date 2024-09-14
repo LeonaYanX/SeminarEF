@@ -36,9 +36,13 @@ namespace SeminarEF
             {
             return JsonSerializer.Deserialize<MessageUdp>(json);
             }
-
-
-       
+        public override string ToString()
+        {
+            return $" FromName: {FromName}, ToName: {ToName}, Text: {Text}";
         }
+
+
+
+    }
     
 }
